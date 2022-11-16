@@ -6,11 +6,17 @@ console.log('our first server');
 // In our servers, we have to use 'require' instead of import
 // Here we will list the requirements for our server
 const express = require('express');
-let data = require('./data/pets.json');
+let data = require('./data/weather.json');
+
 
 // We need to bring in our .env file so we will use this after we have installed
 // 'npm i dotenv'
 require('dotenv').config();
+
+// We must include cors if we want to share resources over the web
+
+const cors = require('cors');
+const { response } = require('express');
 
 //USE
 // Once we have required something, we have to use it
@@ -19,6 +25,9 @@ require('dotenv').config();
 //This is just how express works.
 const app = express();
 
+// We must tell express to use cors
+app.use(cors())
+;
 // Define the PORT and validate that our .env file is working!
 const PORT = process.env.PORT || 3002;
 
@@ -30,38 +39,46 @@ const PORT = process.env.PORT || 3002;
 //Create a basic default route
 // app.get() correlates to axios.get()
 // app.get() takes in a parament or a URL in quotes, and a callback function
-app.get('/', (request, response) => {
-  response.send('Hello, from our server');
+
+app.get('/weather', (request, response, next) => {
+  try {
+    // /weather?city=value
+    let cityInput = request.query.city;
+    let selectedCity = data.find(cityData => cityData.city_name.toLowerCase === cityInput.toLowerCase);
+    let cityWeather = selectedCity.data.map(day => new Forecast(day));
+    console.log('here', cityWeather);
+    //let cityCleanUp = new City(selectedCity);
+
+    response.send(cityWeather);
+  }
+  catch (error) {
+    next(error);
+  }
 });
 
-app.get('/sayHello', (request, response) => {
-  console.log(request.query);
-  let lastName = request.query.lastName
-  response.send(`hi ${request.query.name}${lastName}`);
-});
+console.log(data);
 
 // '*' wild card
 // This will run for any route not defined above
 app.get('*', (request, response) => {
-  response.send('That route does not exist');
+  response.send('This is the landing page');
 });
 
-app.get('/pet', (request, response) => {
-  let species = request.query.species;
-  let selectedWeather = data.find(weather => weather.species === species);
-  let newPrediction = new Weather(selectedWeather);
-  response.send(newPrediction);
-});
 
 // ERRORS
 // handle any errors
+app.use((error, request, response, next) => {
+  response.status(500).send(error.message);
+});
 
 // CLASSES
 
-class Weather {
-  constructior(weatherObj){
-    this.name = weatherObj.name;
-    this.breed = weatherObj.breed;
+class Forecast {
+  constructor(myCity) {
+    //console.log('hi', myCity);
+    //   this.date = myCity.date;
+    this.date = myCity.valid_date;
+    this.description = myCity.weather.description;
   }
 }
 
