@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('our first server');
+//console.log('our first server');
 
 // REQUIRE
 // In our servers, we have to use 'require' instead of import
@@ -17,6 +17,7 @@ require('dotenv').config();
 
 const cors = require('cors');
 const { response } = require('express');
+const axios = require('axios');
 
 //USE
 // Once we have required something, we have to use it
@@ -26,8 +27,7 @@ const { response } = require('express');
 const app = express();
 
 // We must tell express to use cors
-app.use(cors())
-;
+app.use(cors());
 // Define the PORT and validate that our .env file is working!
 const PORT = process.env.PORT || 3002;
 
@@ -40,23 +40,39 @@ const PORT = process.env.PORT || 3002;
 // app.get() correlates to axios.get()
 // app.get() takes in a parament or a URL in quotes, and a callback function
 
-app.get('/weather', (request, response, next) => {
+app.get('/weather', async (request, response, next) => {
   try {
-    // /weather?city=value
-    let cityInput = request.query.city;
-    let selectedCity = data.find(cityData => cityData.city_name.toLowerCase === cityInput.toLowerCase);
-    let cityWeather = selectedCity.data.map(day => new Forecast(day));
-    console.log('here', cityWeather);
-    //let cityCleanUp = new City(selectedCity);
+
+    let latInput = request.query.lat;
+    let lonInput = request.query.lon;
+    let url = `https://api.weatherbit.io/v2.0/forecast/daily?key=${process.env.WEATHER_API_KEY}&lang=en&units=I&days=16&lat=${latInput}&lon=${lonInput}`;
+   //console.log(url);
+    let selectedCity = await axios.get(url);
+    //console.log(selectedCity.data);
+    let cityWeather = selectedCity.data.data.map(day => new Forecast(day));
 
     response.send(cityWeather);
+
   }
   catch (error) {
     next(error);
   }
 });
 
-console.log(data);
+app.get('/movie', async (request, response, next) => {
+  console.log('hi');
+  try {
+    let searchMovie = request.query.search;
+    let movieURL = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${searchMovie}`;
+    let movieResults = await axios.get(movieURL);
+    console.log(movieResults);
+    let topMovies = movieResults.data.results.map(movie => new Movie(movie));
+
+    response.send(topMovies);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // '*' wild card
 // This will run for any route not defined above
@@ -67,7 +83,7 @@ app.get('*', (request, response) => {
 
 // ERRORS
 // handle any errors
-app.use((error, request, response, next) => {
+app.use((error, request, response) => {
   response.status(500).send(error.message);
 });
 
@@ -79,6 +95,21 @@ class Forecast {
     //   this.date = myCity.date;
     this.date = myCity.valid_date;
     this.description = myCity.weather.description;
+    this.low = myCity.low_temp;
+    this.high = myCity.max_temp;
+    this.fullDescription = `Low of ${this.low}, high of ${this.high} with ${this.description}.`;
+
+  }
+}
+
+class Movie {
+  constructor(movieObj) {
+    this.title = movieObj.title;
+    this.overview = movieObj.overview;
+    this.avgRating = movieObj.vote_average;
+    this.totalReviews = movieObj.vote_count;
+    this.imgPath = movieObj.poster_path ? `https://image.tmdb.org/t/p/original/${movieObj.poster_path}` : ' ';
+    this.releaseDate = movieObj.release_date;
   }
 }
 
