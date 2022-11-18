@@ -32,3 +32,13 @@ Start time: 1
 Finish time: 6
 
 Actual time needed to complete: 5 (still not done)
+
+Name of feature: back-end API for city explore
+
+Estimate of time needed to complete: 6hours
+
+Start time: 1pm
+
+Finish time: n/a (still not done)
+
+Actual time needed to complete: I'm on hour 5 so far
