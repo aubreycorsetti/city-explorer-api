@@ -2,12 +2,14 @@
 
 let cache = require('./cache');
 const axios = require('axios');
+require('dotenv').config();
 
 
 async function getMovie(request, response) {
+  console.log('MOVIES!!!!!!!!');
   let city = request.query.search;
   const key = 'movie-' + city;
-  const url = `https://api.themoviedb.org/3/movie/550?api_key=${process.env.MOVIE_API_KEY}/movie?search=${city}`;
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_API_KEY}&query=${city}`;
 
 
 
@@ -25,8 +27,9 @@ async function getMovie(request, response) {
 }
 
 function parseMovie(movieData) {
+  console.log(movieData);
   try {
-    const myMovie = movieData.data.map(day => {
+    const myMovie = movieData.results.map(day => {
       return new Movie(day);
     });
     return Promise.resolve(myMovie);
