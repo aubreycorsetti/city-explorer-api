@@ -2,6 +2,7 @@
 
 let cache = require('./cache');
 const axios = require('axios');
+require('dotenv').config();
 
 
 async function getWeather(request, response) {
